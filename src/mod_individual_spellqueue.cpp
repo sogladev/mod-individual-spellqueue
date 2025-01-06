@@ -51,9 +51,9 @@ public:
     void OnAfterConfigLoad(bool /*reload*/) override
     {
         individualSpellQueue.Enabled = sConfigMgr->GetOption<bool>("IndividualSpellQueue.Enabled", true);
-        individualSpellQueue.Default = sConfigMgr->GetOption<uint32>("IndividualSpellQueue.Default", 400); 
-        individualSpellQueue.MinWindow = sConfigMgr->GetOption<uint32>("IndividualSpellQueue.MinWindow", 100); 
-        individualSpellQueue.MaxWindow = sConfigMgr->GetOption<uint32>("IndividualSpellQueue.MaxWindow", 800); 
+        individualSpellQueue.Default = sConfigMgr->GetOption<uint32>("IndividualSpellQueue.Default", 400);
+        individualSpellQueue.MinWindow = sConfigMgr->GetOption<uint32>("IndividualSpellQueue.MinWindow", 100);
+        individualSpellQueue.MaxWindow = sConfigMgr->GetOption<uint32>("IndividualSpellQueue.MaxWindow", 800);
 
         if (individualSpellQueue.Enabled && !sConfigMgr->GetOption<bool>("SpellQueue.Enabled", true))
             LOG_ERROR("module", "IndividualSpellQueue::OnAfterConfigLoad Module is enabled, but SpellQueue is disabled!. Please adjust your worldserver.conf or individual_spellqueue.conf");
