@@ -21,7 +21,7 @@ struct IndividualSpellQueueModule
     uint32 MaxWindow;
 };
 
-enum TemplateNpcStrings
+enum IndividualSpellQueueStrings
 {
     INFO_INDIVIDUAL_SPELLQUEUE_VIEW_WINDOW = 1,
     ERROR_INDIVIDUAL_SPELLQUEUE_MAX_WINDOW = 2,
