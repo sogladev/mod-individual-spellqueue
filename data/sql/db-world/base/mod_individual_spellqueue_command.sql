@@ -7,4 +7,4 @@ INSERT INTO `command` (`name`, `security`, `help`) VALUES
 ('spellqueue default', 0, 'Syntax: .spellqueue default\nSet your custom spellqueue window to the default value'),
 ('spellqueue enable', 0, 'Syntax: .spellqueue enable\nEnable the custom spellqueue window.'),
 ('spellqueue disable', 0, 'Syntax: .spellqueue disable\nDisable the custom spellqueue window.'),
-('spellqueue latency', 0, 'Syntax: .spellqueue latency\Toggle latency compensation.');
+('spellqueue latency', 0, 'Syntax: .spellqueue latency\nToggle latency compensation.');
