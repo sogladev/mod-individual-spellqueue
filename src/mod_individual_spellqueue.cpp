@@ -212,7 +212,6 @@ public:
         return true;
     }
 
-
     static bool HandleSetCommand(ChatHandler* handler, uint32 window)
     {
         if (!individualSpellQueue.Enabled)
