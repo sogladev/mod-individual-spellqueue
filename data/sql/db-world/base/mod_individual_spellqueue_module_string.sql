@@ -3,8 +3,8 @@ SET @MODULE_STRING := 'individual-spellqueue';
 DELETE FROM `module_string` WHERE `module` = @MODULE_STRING;
 INSERT INTO `module_string` (`module`, `id`, `string`) VALUES
 (@MODULE_STRING, 1, 'Your current spellqueue window is {}.'),
-(@MODULE_STRING, 2, 'The maximum rate limit is {}.'),
-(@MODULE_STRING, 3, 'The minimum rate limit is {}.'),
+(@MODULE_STRING, 2, 'The maximum spellqueue window is {}.'),
+(@MODULE_STRING, 3, 'The minimum spellqueue window is {}.'),
 (@MODULE_STRING, 4, 'You have updated your spellqueue window to {}.'),
 (@MODULE_STRING, 5, 'You have disabled your spellqueue.'),
 (@MODULE_STRING, 6, 'You have enabled your spellqueue with a window of {}.'),
