@@ -85,7 +85,7 @@ public:
     void OnLogout(Player* player) override
     {
         if (PlayerIndividualSpellQueueWindow* data = player->CustomData.Get<PlayerIndividualSpellQueueWindow>("IndividualSpellQueue"))
-            CharacterDatabase.DirectExecute("REPLACE INTO `mod_individual_spellqueue` (`guid`, `window`, `latency`) VALUES ('{}', '{}', '{}');", player->GetGUID().GetCounter(), data->window, data->latency);
+            CharacterDatabase.DirectExecute("REPLACE INTO `mod_individual_spellqueue` (`guid`, `window`, `latency`) VALUES ('{}', '{}', '{}');", player->GetGUID().GetCounter(), data->window, data->latency ? 1 : 0);
     }
 
    void OnGetSpellQueueWindow(const Player* player, uint32& window) override
