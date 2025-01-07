@@ -78,7 +78,7 @@ public:
         if (QueryResult result = CharacterDatabase.Query("SELECT `window`, `latency` FROM `mod_individual_spellqueue` WHERE `guid`='{}'", player->GetGUID().GetCounter()))
         {
             Field* fields = result->Fetch();
-            player->CustomData.Set("IndividualSpellQueue", new PlayerIndividualSpellQueueWindow(fields[0].Get<uint32>(),(fields[1].Get<bool>())));
+            player->CustomData.Set("IndividualSpellQueue", new PlayerIndividualSpellQueueWindow(fields[0].Get<uint32>(), (fields[1].Get<bool>())));
         }
     }
 
