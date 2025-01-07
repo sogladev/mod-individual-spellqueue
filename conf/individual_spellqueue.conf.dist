@@ -26,9 +26,15 @@ IndividualSpellQueue.Enable = 1
 #
 #    IndividualSpellQueue.MaxWindow
 #        Description: Maximum window
-#        Default:     800
+#        Default:     600
+
+#    IndividualSpellQueue.LatencyDefault
+#        Description: Set latency compensation by default
+#        Default:     0 - Disabled
+#                     1 - Enabled
 #
 
 IndividualSpellQueue.Default = 400
 IndividualSpellQueue.MinWindow = 100
-IndividualSpellQueue.MaxWindow = 800
+IndividualSpellQueue.MaxWindow = 600
+IndividualSpellQueue.LatencyDefault = 0

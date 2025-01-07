@@ -9,6 +9,8 @@ This is a module for [AzerothCore](http://www.azerothcore.org) that allows playe
 
 - Modifies SpellQueue.Window to use custom values per character
 
+WIP: requires hook patch commit https://github.com/azerothcore/azerothcore-wotlk/commit/f77b4a97d1c1
+
 ## How to install
 https://www.azerothcore.org/wiki/installing-a-module
 

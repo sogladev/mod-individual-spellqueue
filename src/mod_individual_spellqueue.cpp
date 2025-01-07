@@ -19,6 +19,7 @@ struct IndividualSpellQueueModule
     uint32 Default;
     uint32 MinWindow;
     uint32 MaxWindow;
+    bool LatencyDefault;
 };
 
 enum IndividualSpellQueueStrings
@@ -30,7 +31,9 @@ enum IndividualSpellQueueStrings
     SUCCESS_INDIVIDUAL_SPELLQUEUE_DISABLED = 5,
     SUCCESS_INDIVIDUAL_SPELLQUEUE_ENABLED = 6,
     SUCCESS_INDIVIDUAL_SPELLQUEUE_DEFAULT = 7,
-    ERROR_INDIVIDUAL_SPELLQUEUE_MODULE_DISABLED = 8
+    ERROR_INDIVIDUAL_SPELLQUEUE_MODULE_DISABLED = 8,
+    SUCCESS_INDIVIDUAL_SPELLQUEUE_LATENCY_ENABLED = 9,
+    SUCCESS_INDIVIDUAL_SPELLQUEUE_LATENCY_DISABLED = 10
 };
 
 IndividualSpellQueueModule individualSpellQueue;
@@ -38,9 +41,10 @@ IndividualSpellQueueModule individualSpellQueue;
 class PlayerIndividualSpellQueueWindow : public DataMap::Base
 {
 public:
-    PlayerIndividualSpellQueueWindow() : window(individualSpellQueue.Default) {}
-    PlayerIndividualSpellQueueWindow(uint32 window) : window(window) {}
+    PlayerIndividualSpellQueueWindow() : window(individualSpellQueue.Default), latency(individualSpellQueue.LatencyDefault) {}
+    PlayerIndividualSpellQueueWindow(uint32 window, bool latency) : window(window), latency(latency) {}
     uint32 window;
+    bool latency;
 };
 
 class IndividualSpellQueueConfig : public WorldScript
@@ -53,7 +57,8 @@ public:
         individualSpellQueue.Enabled = sConfigMgr->GetOption<bool>("IndividualSpellQueue.Enabled", true);
         individualSpellQueue.Default = sConfigMgr->GetOption<uint32>("IndividualSpellQueue.Default", 400);
         individualSpellQueue.MinWindow = sConfigMgr->GetOption<uint32>("IndividualSpellQueue.MinWindow", 100);
-        individualSpellQueue.MaxWindow = sConfigMgr->GetOption<uint32>("IndividualSpellQueue.MaxWindow", 800);
+        individualSpellQueue.MaxWindow = sConfigMgr->GetOption<uint32>("IndividualSpellQueue.MaxWindow", 600);
+        individualSpellQueue.LatencyDefault = sConfigMgr->GetOption<bool>("IndividualSpellQueue.LatencyDefault", false);
 
         if (individualSpellQueue.Enabled && !sConfigMgr->GetOption<bool>("SpellQueue.Enabled", true))
             LOG_ERROR("module", "IndividualSpellQueue::OnAfterConfigLoad Module is enabled, but SpellQueue is disabled!. Please adjust your worldserver.conf or individual_spellqueue.conf");
@@ -70,30 +75,33 @@ public:
         if (!individualSpellQueue.Enabled)
             return;
 
-        if (QueryResult result = CharacterDatabase.Query("SELECT `window` FROM `mod_individual_spellqueue` WHERE `guid`='{}'", player->GetGUID().GetCounter()))
+        if (QueryResult result = CharacterDatabase.Query("SELECT `window`, `latency` FROM `mod_individual_spellqueue` WHERE `guid`='{}'", player->GetGUID().GetCounter()))
         {
             Field* fields = result->Fetch();
-            player->CustomData.Set("IndividualSpellQueue", new PlayerIndividualSpellQueueWindow(fields[0].Get<uint32>()));
+            player->CustomData.Set("IndividualSpellQueue", new PlayerIndividualSpellQueueWindow(fields[0].Get<uint32>(), (fields[1].Get<bool>())));
         }
     }
 
     void OnLogout(Player* player) override
     {
         if (PlayerIndividualSpellQueueWindow* data = player->CustomData.Get<PlayerIndividualSpellQueueWindow>("IndividualSpellQueue"))
-            CharacterDatabase.DirectExecute("REPLACE INTO `mod_individual_spellqueue` (`guid`, `window`) VALUES ('{}', '{}');", player->GetGUID().GetCounter(), data->window);
+            CharacterDatabase.DirectExecute("REPLACE INTO `mod_individual_spellqueue` (`guid`, `window`, `latency`) VALUES ('{}', '{}', '{}');", player->GetGUID().GetCounter(), data->window, data->latency ? 1 : 0);
     }
 
-   //void OnGetSpellQueueWindow(Player* player, uint32& window) override
-   //{
-   //    if (!individualSpellQueue.Enabled)
-   //        return;
-   //    // {
-   //        // if (PlayerXpWindow* data = player->CustomData.Get<PlayerXpWindow>("IndividualSpellQueue"))
-   //        // {
-   //            // amount = static_cast<uint32>(std::round(static_cast<float>(amount) * data->XPWindow));
-   //        // }
-   //    // }
-   //}
+   void OnGetSpellQueueWindow(const Player* player, uint32& window) override
+    {
+        if (!individualSpellQueue.Enabled)
+            return;
+
+        if (PlayerIndividualSpellQueueWindow* data = player->CustomData.Get<PlayerIndividualSpellQueueWindow>("IndividualSpellQueue"))
+        {
+            window = data->window;
+            // If window is enabled (non-0) and latency compensation is enabled
+            if (window && data->latency)
+                window += player->GetSession()->GetLatency();
+            window = std::min(window, individualSpellQueue.MaxWindow);
+        }
+   }
 };
 
 class IndividualSpellQueueCommand : public CommandScript
@@ -108,6 +116,7 @@ public:
             { "default",  HandleDefaultCommand, SEC_PLAYER, Console::No },
             { "disable",  HandleDisableCommand, SEC_PLAYER, Console::No },
             { "enable",  HandleEnableCommand, SEC_PLAYER, Console::No },
+            { "latency",  HandleLatencyCommand, SEC_PLAYER, Console::No },
             { "set",  HandleSetCommand, SEC_PLAYER, Console::No },
             { "view",  HandleViewCommand, SEC_PLAYER, Console::No }
         };
@@ -177,6 +186,32 @@ public:
         return true;
     }
 
+    static bool HandleLatencyCommand(ChatHandler* handler)
+    {
+        if (!individualSpellQueue.Enabled)
+        {
+            handler->PSendModuleSysMessage(MODULE_STRING, ERROR_INDIVIDUAL_SPELLQUEUE_MODULE_DISABLED);
+            handler->SetSentErrorMessage(true);
+            return false;
+        }
+
+        Player* player = handler->GetSession()->GetPlayer();
+
+        if (!player)
+            return false;
+
+        // toggle latency compensation
+        bool latency = player->CustomData.GetDefault<PlayerIndividualSpellQueueWindow>("IndividualSpellQueue")->latency;
+        player->CustomData.GetDefault<PlayerIndividualSpellQueueWindow>("IndividualSpellQueue")->latency = !latency;
+
+        handler->PSendModuleSysMessage(MODULE_STRING,
+            player->CustomData.GetDefault<PlayerIndividualSpellQueueWindow>("IndividualSpellQueue")->latency
+                ? SUCCESS_INDIVIDUAL_SPELLQUEUE_LATENCY_ENABLED : SUCCESS_INDIVIDUAL_SPELLQUEUE_LATENCY_DISABLED,
+            player->CustomData.GetDefault<PlayerIndividualSpellQueueWindow>("IndividualSpellQueue")->window
+        );
+        return true;
+    }
+
     static bool HandleSetCommand(ChatHandler* handler, uint32 window)
     {
         if (!individualSpellQueue.Enabled)
@@ -203,7 +238,7 @@ public:
 
         if (window > individualSpellQueue.MaxWindow)
         {
-            handler->PSendModuleSysMessage(MODULE_STRING, ERROR_INDIVIDUAL_SPELLQUEUE_MIN_WINDOW, individualSpellQueue.MaxWindow);
+            handler->PSendModuleSysMessage(MODULE_STRING, ERROR_INDIVIDUAL_SPELLQUEUE_MAX_WINDOW, individualSpellQueue.MaxWindow);
             handler->SetSentErrorMessage(true);
             return false;
         }
