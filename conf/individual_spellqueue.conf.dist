@@ -16,17 +16,17 @@
 
 IndividualSpellQueue.Enable = 1
 
-#    IndividualSpellQueue.Default
+#    IndividualSpellQueue.Default (set by SpellQueue.Window in worldserver.conf)
 #        Description: Default
 #        Default:     400 - Blizzard Default
 #
 #    IndividualSpellQueue.MinWindow
 #        Description: Minimum window
-#        Default:     100
+#        Default:     50
 #
 #    IndividualSpellQueue.MaxWindow
 #        Description: Maximum window
-#        Default:     600
+#        Default:     500
 
 #    IndividualSpellQueue.LatencyDefault
 #        Description: Set latency compensation by default
@@ -34,7 +34,6 @@ IndividualSpellQueue.Enable = 1
 #                     1 - Enabled
 #
 
-IndividualSpellQueue.Default = 400
-IndividualSpellQueue.MinWindow = 100
-IndividualSpellQueue.MaxWindow = 600
+IndividualSpellQueue.MinWindow = 50
+IndividualSpellQueue.MaxWindow = 500
 IndividualSpellQueue.LatencyDefault = 0
