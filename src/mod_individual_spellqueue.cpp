@@ -220,13 +220,13 @@ public:
             return false;
         }
 
-        if (!window)
-            return false;
-
         Player* player = handler->GetSession()->GetPlayer();
 
         if (!player)
             return false;
+
+        if (window == 0)
+            return HandleDisableCommand(handler);
 
         if (!(individualSpellQueue.MinWindow <= window && window <= individualSpellQueue.MaxWindow))
         {
