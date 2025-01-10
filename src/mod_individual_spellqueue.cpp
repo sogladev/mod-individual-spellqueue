@@ -16,7 +16,7 @@ constexpr const char* MODULE_STRING = "individual-spellqueue";
 struct IndividualSpellQueueModule
 {
     bool Enabled;
-    uint32 Default;
+    uint32 Default; // set by SpellQueue.Window in worldserver.conf
     uint32 MinWindow;
     uint32 MaxWindow;
     bool LatencyDefault;
@@ -25,15 +25,14 @@ struct IndividualSpellQueueModule
 enum IndividualSpellQueueStrings
 {
     INFO_INDIVIDUAL_SPELLQUEUE_VIEW_WINDOW = 1,
-    ERROR_INDIVIDUAL_SPELLQUEUE_MAX_WINDOW = 2,
-    ERROR_INDIVIDUAL_SPELLQUEUE_MIN_WINDOW = 3,
-    SUCCESS_INDIVIDUAL_SPELLQUEUE_UPDATED = 4,
-    SUCCESS_INDIVIDUAL_SPELLQUEUE_DISABLED = 5,
-    SUCCESS_INDIVIDUAL_SPELLQUEUE_ENABLED = 6,
-    SUCCESS_INDIVIDUAL_SPELLQUEUE_DEFAULT = 7,
-    ERROR_INDIVIDUAL_SPELLQUEUE_MODULE_DISABLED = 8,
-    SUCCESS_INDIVIDUAL_SPELLQUEUE_LATENCY_ENABLED = 9,
-    SUCCESS_INDIVIDUAL_SPELLQUEUE_LATENCY_DISABLED = 10
+    ERROR_INDIVIDUAL_SPELLQUEUE_RANGE_WINDOW = 2,
+    SUCCESS_INDIVIDUAL_SPELLQUEUE_UPDATED = 3,
+    SUCCESS_INDIVIDUAL_SPELLQUEUE_DISABLED = 4,
+    SUCCESS_INDIVIDUAL_SPELLQUEUE_ENABLED = 5,
+    SUCCESS_INDIVIDUAL_SPELLQUEUE_DEFAULT = 6,
+    ERROR_INDIVIDUAL_SPELLQUEUE_MODULE_DISABLED = 7,
+    SUCCESS_INDIVIDUAL_SPELLQUEUE_LATENCY_ENABLED = 8,
+    SUCCESS_INDIVIDUAL_SPELLQUEUE_LATENCY_DISABLED = 9
 };
 
 IndividualSpellQueueModule individualSpellQueue;
@@ -55,9 +54,9 @@ public:
     void OnAfterConfigLoad(bool /*reload*/) override
     {
         individualSpellQueue.Enabled = sConfigMgr->GetOption<bool>("IndividualSpellQueue.Enabled", true);
-        individualSpellQueue.Default = sConfigMgr->GetOption<uint32>("IndividualSpellQueue.Default", 400);
-        individualSpellQueue.MinWindow = sConfigMgr->GetOption<uint32>("IndividualSpellQueue.MinWindow", 100);
-        individualSpellQueue.MaxWindow = sConfigMgr->GetOption<uint32>("IndividualSpellQueue.MaxWindow", 600);
+        individualSpellQueue.Default = sWorld->getIntConfig(CONFIG_SPELL_QUEUE_WINDOW); // set by SpellQueue.Window in worldserver.conf
+        individualSpellQueue.MinWindow = sConfigMgr->GetOption<uint32>("IndividualSpellQueue.MinWindow", 50);
+        individualSpellQueue.MaxWindow = sConfigMgr->GetOption<uint32>("IndividualSpellQueue.MaxWindow", 500);
         individualSpellQueue.LatencyDefault = sConfigMgr->GetOption<bool>("IndividualSpellQueue.LatencyDefault", false);
 
         if (individualSpellQueue.Enabled && !sConfigMgr->GetOption<bool>("SpellQueue.Enabled", true))
@@ -229,16 +228,9 @@ public:
         if (!player)
             return false;
 
-        if (window < individualSpellQueue.MinWindow)
+        if (!(individualSpellQueue.MinWindow <= window && window <= individualSpellQueue.MaxWindow))
         {
-            handler->PSendModuleSysMessage(MODULE_STRING, ERROR_INDIVIDUAL_SPELLQUEUE_MIN_WINDOW, individualSpellQueue.MinWindow);
-            handler->SetSentErrorMessage(true);
-            return false;
-        }
-
-        if (window > individualSpellQueue.MaxWindow)
-        {
-            handler->PSendModuleSysMessage(MODULE_STRING, ERROR_INDIVIDUAL_SPELLQUEUE_MAX_WINDOW, individualSpellQueue.MaxWindow);
+            handler->PSendModuleSysMessage(MODULE_STRING, ERROR_INDIVIDUAL_SPELLQUEUE_RANGE_WINDOW, individualSpellQueue.MinWindow, individualSpellQueue.MaxWindow);
             handler->SetSentErrorMessage(true);
             return false;
         }
